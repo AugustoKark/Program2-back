@@ -19,9 +19,7 @@ entity Dispositivo {
   descripcion TextBlob required
   precioBase BigDecimal required
   moneda String required
-  idProfe Long required
-  disponible Boolean required
-  
+ 
 }
 
 entity Opcion {
