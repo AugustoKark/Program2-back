@@ -4,6 +4,8 @@ import static edu.um.alumno.security.SecurityUtils.AUTHORITIES_KEY;
 import static edu.um.alumno.security.SecurityUtils.JWT_ALGORITHM;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.um.alumno.domain.User;
+import edu.um.alumno.repository.UserRepository;
 import edu.um.alumno.web.rest.vm.LoginVM;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -38,6 +40,7 @@ public class AuthenticateController {
     private static final Logger LOG = LoggerFactory.getLogger(AuthenticateController.class);
 
     private final JwtEncoder jwtEncoder;
+    private final UserRepository userRepository;
 
     @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:0}")
     private long tokenValidityInSeconds;
@@ -47,9 +50,14 @@ public class AuthenticateController {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    public AuthenticateController(JwtEncoder jwtEncoder, AuthenticationManagerBuilder authenticationManagerBuilder) {
+    public AuthenticateController(
+        JwtEncoder jwtEncoder,
+        AuthenticationManagerBuilder authenticationManagerBuilder,
+        UserRepository userRepository
+    ) {
         this.jwtEncoder = jwtEncoder;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/authenticate")
@@ -62,9 +70,11 @@ public class AuthenticateController {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = this.createToken(authentication, loginVM.isRememberMe());
+        User user = userRepository.findOneByLogin(loginVM.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(jwt);
-        return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(new JWTToken(jwt, user.getId()), httpHeaders, HttpStatus.OK);
     }
 
     /**
@@ -108,9 +118,11 @@ public class AuthenticateController {
     static class JWTToken {
 
         private String idToken;
+        private Long userId;
 
-        JWTToken(String idToken) {
+        JWTToken(String idToken, Long userId) {
             this.idToken = idToken;
+            this.userId = userId;
         }
 
         @JsonProperty("id_token")
@@ -120,6 +132,14 @@ public class AuthenticateController {
 
         void setIdToken(String idToken) {
             this.idToken = idToken;
+        }
+
+        @JsonProperty("userId")
+        Long getUserId() {
+            return userId;
+        }
+        void setUserId(Long userId) {
+            this.userId = userId;
         }
     }
 }
