@@ -105,7 +105,7 @@ public class OpcionDTO implements Serializable {
             ", nombre='" + getNombre() + "'" +
             ", descripcion='" + getDescripcion() + "'" +
             ", precioAdicional=" + getPrecioAdicional() +
-            ", personalizacion=" + getPersonalizacion() +
+//            ", personalizacion=" + getPersonalizacion() +
             "}";
     }
 }

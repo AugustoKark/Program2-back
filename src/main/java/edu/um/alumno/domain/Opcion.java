@@ -20,7 +20,7 @@ public class Opcion implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -40,7 +40,7 @@ public class Opcion implements Serializable {
     @Column(name = "precio_adicional", precision = 21, scale = 2, nullable = false)
     private BigDecimal precioAdicional;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnoreProperties(value = { "opciones", "dispositivo" }, allowSetters = true)
     private Personalizacion personalizacion;
 

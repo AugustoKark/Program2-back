@@ -22,7 +22,7 @@ public class Dispositivo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -46,17 +46,17 @@ public class Dispositivo implements Serializable {
     @Column(name = "moneda", nullable = false)
     private String moneda;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "dispositivo")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "dispositivo", cascade = CascadeType.ALL)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "dispositivo" }, allowSetters = true)
     private Set<Caracteristica> caracteristicas = new HashSet<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "dispositivo")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "dispositivo", cascade = CascadeType.ALL)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "opciones", "dispositivo" }, allowSetters = true)
     private Set<Personalizacion> personalizaciones = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "rel_dispositivo__adicionales",
         joinColumns = @JoinColumn(name = "dispositivo_id"),

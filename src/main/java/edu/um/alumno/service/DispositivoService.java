@@ -4,7 +4,9 @@ import edu.um.alumno.domain.Dispositivo;
 import edu.um.alumno.repository.DispositivoRepository;
 import edu.um.alumno.service.dto.DispositivoDTO;
 import edu.um.alumno.service.mapper.DispositivoMapper;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -117,5 +119,12 @@ public class DispositivoService {
     public void delete(Long id) {
         LOG.debug("Request to delete Dispositivo : {}", id);
         dispositivoRepository.deleteById(id);
+    }
+
+    public List<DispositivoDTO> saveAll(List<DispositivoDTO> dispositivoDTOs) {
+        LOG.debug("Request to save list of Dispositivos : {}", dispositivoDTOs);
+        List<Dispositivo> dispositivos = dispositivoDTOs.stream().map(dispositivoMapper::toEntity).collect(Collectors.toList());
+        dispositivos = dispositivoRepository.saveAll(dispositivos);
+        return null;
     }
 }

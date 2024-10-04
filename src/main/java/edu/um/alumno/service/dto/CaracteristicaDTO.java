@@ -80,7 +80,7 @@ public class CaracteristicaDTO implements Serializable {
             "id=" + getId() +
             ", nombre='" + getNombre() + "'" +
             ", descripcion='" + getDescripcion() + "'" +
-            ", dispositivo=" + getDispositivo() +
+//            ", dispositivo=" + getDispositivo() +
             "}";
     }
 }

@@ -33,6 +33,9 @@ public class DispositivoDTO implements Serializable {
 
     private Set<AdicionalDTO> adicionales = new HashSet<>();
 
+    private Set<CaracteristicaDTO> caracteristicas;
+    private Set<PersonalizacionDTO> personalizaciones;
+
     public Long getId() {
         return id;
     }
@@ -89,6 +92,22 @@ public class DispositivoDTO implements Serializable {
         this.adicionales = adicionales;
     }
 
+    public Set<CaracteristicaDTO> getCaracteristicas() {
+        return caracteristicas;
+    }
+
+    public void setCaracteristicas(Set<CaracteristicaDTO> caracteristicas) {
+        this.caracteristicas = caracteristicas;
+    }
+
+    public Set<PersonalizacionDTO> getPersonalizaciones() {
+        return personalizaciones;
+    }
+
+    public void setPersonalizaciones(Set<PersonalizacionDTO> personalizaciones) {
+        this.personalizaciones = personalizaciones;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -120,6 +139,8 @@ public class DispositivoDTO implements Serializable {
             ", descripcion='" + getDescripcion() + "'" +
             ", precioBase=" + getPrecioBase() +
             ", moneda='" + getMoneda() + "'" +
+            ", caracteristicas=" + caracteristicas +
+            ", personalizaciones=" + personalizaciones +
             ", adicionales=" + getAdicionales() +
             "}";
     }

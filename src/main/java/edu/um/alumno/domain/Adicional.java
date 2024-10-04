@@ -22,7 +22,7 @@ public class Adicional implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -41,7 +41,7 @@ public class Adicional implements Serializable {
     @Column(name = "precio_gratis", precision = 21, scale = 2)
     private BigDecimal precioGratis;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "adicionales")
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "adicionales", cascade = CascadeType.ALL)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "caracteristicas", "personalizaciones", "adicionales" }, allowSetters = true)
     private Set<Dispositivo> dispositivos = new HashSet<>();
