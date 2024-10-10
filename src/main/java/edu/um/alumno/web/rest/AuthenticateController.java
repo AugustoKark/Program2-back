@@ -6,11 +6,14 @@ import static edu.um.alumno.security.SecurityUtils.JWT_ALGORITHM;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.um.alumno.domain.User;
 import edu.um.alumno.repository.UserRepository;
+import edu.um.alumno.service.UserService;
+import edu.um.alumno.service.dto.UserLoginDTO;
 import edu.um.alumno.web.rest.vm.LoginVM;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +44,7 @@ public class AuthenticateController {
 
     private final JwtEncoder jwtEncoder;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:0}")
     private long tokenValidityInSeconds;
@@ -53,11 +57,13 @@ public class AuthenticateController {
     public AuthenticateController(
         JwtEncoder jwtEncoder,
         AuthenticationManagerBuilder authenticationManagerBuilder,
-        UserRepository userRepository
+        UserRepository userRepository,
+        UserService userService
     ) {
         this.jwtEncoder = jwtEncoder;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @PostMapping("/authenticate")
@@ -70,11 +76,13 @@ public class AuthenticateController {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = this.createToken(authentication, loginVM.isRememberMe());
-        User user = userRepository.findOneByLogin(loginVM.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserLoginDTO user = userService.getUserWithRoles(loginVM.getUsername());
+        Set<String> roles = user.getRoles();
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(jwt);
-        return new ResponseEntity<>(new JWTToken(jwt, user.getId()), httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(new JWTToken(jwt, user.getId(), roles), httpHeaders, HttpStatus.OK);
     }
 
     /**
@@ -119,10 +127,12 @@ public class AuthenticateController {
 
         private String idToken;
         private Long userId;
+        private Set<String> roles;
 
-        JWTToken(String idToken, Long userId) {
+        JWTToken(String idToken, Long userId, Set<String> roles) {
             this.idToken = idToken;
             this.userId = userId;
+            this.roles = roles;
         }
 
         @JsonProperty("id_token")
@@ -140,6 +150,15 @@ public class AuthenticateController {
         }
         void setUserId(Long userId) {
             this.userId = userId;
+        }
+
+        @JsonProperty("roles")
+        Set<String> getRoles() {
+            return roles;
+        }
+
+        void setRoles(Set<String> roles) {
+            this.roles = roles;
         }
     }
 }

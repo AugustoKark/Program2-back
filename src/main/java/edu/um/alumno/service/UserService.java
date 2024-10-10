@@ -9,6 +9,7 @@ import edu.um.alumno.security.AuthoritiesConstants;
 import edu.um.alumno.security.SecurityUtils;
 import edu.um.alumno.service.dto.AdminUserDTO;
 import edu.um.alumno.service.dto.UserDTO;
+import edu.um.alumno.service.dto.UserLoginDTO;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -320,5 +321,14 @@ public class UserService {
         if (user.getEmail() != null) {
             Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
         }
+    }
+
+    public UserLoginDTO getUserWithRoles(String login) {
+        User user = userRepository.findOneByLogin(login).orElseThrow(() -> new RuntimeException("User not found"));
+        UserLoginDTO UserLoginDTO = new UserLoginDTO();
+        UserLoginDTO.setId(user.getId());
+        UserLoginDTO.setLogin(user.getLogin());
+        UserLoginDTO.setRoles(user.getAuthorities().stream().map(authority -> authority.getName()).collect(Collectors.toSet()));
+        return UserLoginDTO;
     }
 }
