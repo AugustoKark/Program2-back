@@ -2,6 +2,7 @@ package edu.um.alumno;
 
 import edu.um.alumno.config.ApplicationProperties;
 import edu.um.alumno.config.CRLFLogConverter;
+import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -40,6 +41,12 @@ public class TechmarketApp {
      */
     @PostConstruct
     public void initApplication() {
+        Dotenv dotenv = Dotenv.load();
+        System.setProperty("MAIL_USERNAME", dotenv.get("MAIL_USERNAME"));
+        System.setProperty("MAIL_PASSWORD", dotenv.get("MAIL_PASSWORD"));
+
+        System.out.println("MAIL_USERNAME: " + System.getProperty("MAIL_USERNAME"));
+
         Collection<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
         if (
             activeProfiles.contains(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT) &&
