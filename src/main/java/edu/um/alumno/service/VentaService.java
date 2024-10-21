@@ -1,16 +1,36 @@
 package edu.um.alumno.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.um.alumno.domain.User;
 import edu.um.alumno.domain.Venta;
+import edu.um.alumno.repository.UserRepository;
 import edu.um.alumno.repository.VentaRepository;
 import edu.um.alumno.service.dto.VentaDTO;
+import edu.um.alumno.service.dto.VentaRequestDTO;
+import edu.um.alumno.service.dto.VentaResponseDTO;
 import edu.um.alumno.service.mapper.VentaMapper;
+import edu.um.alumno.web.rest.VentaResource;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * Service Implementation for managing {@link edu.um.alumno.domain.Venta}.
@@ -22,12 +42,17 @@ public class VentaService {
     private static final Logger LOG = LoggerFactory.getLogger(VentaService.class);
 
     private final VentaRepository ventaRepository;
+    private final UserRepository userRepository;
 
     private final VentaMapper ventaMapper;
 
-    public VentaService(VentaRepository ventaRepository, VentaMapper ventaMapper) {
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final String profesorBackendUrl = "http://192.168.194.254:8080/api/catedra/vender";
+
+    public VentaService(VentaRepository ventaRepository, VentaMapper ventaMapper, UserRepository userRepository) {
         this.ventaRepository = ventaRepository;
         this.ventaMapper = ventaMapper;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -108,5 +133,59 @@ public class VentaService {
     public void delete(Long id) {
         LOG.debug("Request to delete Venta : {}", id);
         ventaRepository.deleteById(id);
+    }
+
+    public Venta procesarVenta(VentaRequestDTO ventaRequestDTO) {
+        String token = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            byte[] jsonData = Files.readAllBytes(Paths.get("apitoken.json"));
+            Map<String, String> tokenMap = objectMapper.readValue(jsonData, Map.class);
+            token = tokenMap.get("token");
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading token from apitoken.json", e);
+        }
+
+        // Obtener el id del usuario autenticado
+        Long userId = ventaRequestDTO.getUserId();
+        System.out.println("----------------------------------------------");
+
+        System.out.println("REQUEST DTO: " + ventaRequestDTO.toString());
+        System.out.println("----------------------------------------------");
+
+        // Obtener el usuario desde el repositorio
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Crear los headers y agregar el token JWT
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        // Crear la entidad HTTP con los headers y el cuerpo de la solicitud
+        HttpEntity<VentaRequestDTO> entity = new HttpEntity<>(ventaRequestDTO, headers);
+
+        // Enviar solicitud al backend del profesor
+        ResponseEntity<VentaResponseDTO> response = restTemplate.exchange(
+            profesorBackendUrl,
+            HttpMethod.POST,
+            entity,
+            VentaResponseDTO.class
+        );
+
+        System.out.println("----------------------------------------------");
+
+        System.out.println("RESPONSE: " + response.getBody());
+        System.out.println("idVenta: " + VentaResponseDTO.getIdVenta());
+
+        System.out.println("----------------------------------------------");
+
+        // Crear y guardar la venta en la base de datos
+        Venta venta = new Venta();
+        // No establecer manualmente el ID de la venta
+        venta.setId(VentaResponseDTO.getIdVenta());
+        venta.setFechaVenta(ventaRequestDTO.getFechaVenta());
+        venta.setPrecioFinal(ventaRequestDTO.getPrecioFinal());
+        venta.setUser(user);
+
+        return ventaRepository.save(venta);
     }
 }
