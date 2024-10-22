@@ -39,11 +39,16 @@ public class DispositivoService {
      * @return the persisted entity.
      */
     public DispositivoDTO save(DispositivoDTO dispositivoDTO) {
-        LOG.debug("Request to save Dispositivo : {}", dispositivoDTO);
-        Dispositivo dispositivo = dispositivoMapper.toEntity(dispositivoDTO);
-        dispositivo = dispositivoRepository.save(dispositivo);
-        LOG.info("Dispositivo saved with ID: {}", dispositivo.getId());
-        return dispositivoMapper.toDto(dispositivo);
+        try {
+            LOG.debug("Request to save Dispositivo : {}", dispositivoDTO);
+            Dispositivo dispositivo = dispositivoMapper.toEntity(dispositivoDTO);
+            dispositivo = dispositivoRepository.save(dispositivo);
+            LOG.info("Dispositivo saved with ID: {}", dispositivo.getId());
+            return dispositivoMapper.toDto(dispositivo);
+        } catch (Exception e) {
+            LOG.error("Error saving Dispositivo with ID: {}", dispositivoDTO.getId());
+            return null;
+        }
     }
 
     /**
@@ -53,11 +58,16 @@ public class DispositivoService {
      * @return the persisted entity.
      */
     public DispositivoDTO update(DispositivoDTO dispositivoDTO) {
-        LOG.debug("Request to update Dispositivo : {}", dispositivoDTO);
-        Dispositivo dispositivo = dispositivoMapper.toEntity(dispositivoDTO);
-        dispositivo = dispositivoRepository.save(dispositivo);
-        LOG.info("Dispositivo updated with ID: {}", dispositivo.getId());
-        return dispositivoMapper.toDto(dispositivo);
+        try {
+            LOG.debug("Request to update Dispositivo : {}", dispositivoDTO);
+            Dispositivo dispositivo = dispositivoMapper.toEntity(dispositivoDTO);
+            dispositivo = dispositivoRepository.save(dispositivo);
+            LOG.info("Dispositivo updated with ID: {}", dispositivo.getId());
+            return dispositivoMapper.toDto(dispositivo);
+        } catch (Exception e) {
+            LOG.error("Error updating Dispositivo with ID: {}", dispositivoDTO.getId());
+            return null;
+        }
     }
 
     /**
@@ -87,10 +97,17 @@ public class DispositivoService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
+
     @Transactional(readOnly = true)
     public Page<DispositivoDTO> findAll(Pageable pageable) {
         LOG.debug("Request to get all Dispositivos");
         return dispositivoRepository.findAll(pageable).map(dispositivoMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DispositivoDTO> findAllNoPag() {
+        LOG.debug("Request to get all Dispositivos without pagination");
+        return dispositivoRepository.findAll().stream().map(dispositivoMapper::toDto).collect(Collectors.toList());
     }
 
     /**
@@ -110,8 +127,13 @@ public class DispositivoService {
      */
     @Transactional(readOnly = true)
     public Optional<DispositivoDTO> findOne(Long id) {
-        LOG.debug("Request to get Dispositivo : {}", id);
-        return dispositivoRepository.findOneWithEagerRelationships(id).map(dispositivoMapper::toDto);
+        try {
+            LOG.debug("Request to get Dispositivo : {}", id);
+            return dispositivoRepository.findOneWithEagerRelationships(id).map(dispositivoMapper::toDto);
+        } catch (Exception e) {
+            LOG.error("Error getting Dispositivo with ID: {}", id);
+            return null;
+        }
     }
 
     /**
@@ -120,9 +142,13 @@ public class DispositivoService {
      * @param id the id of the entity.
      */
     public void delete(Long id) {
-        LOG.debug("Request to delete Dispositivo : {}", id);
-        dispositivoRepository.deleteById(id);
-        LOG.info("Dispositivo deleted with ID: {}", id);
+        try {
+            LOG.debug("Request to delete Dispositivo : {}", id);
+            dispositivoRepository.deleteById(id);
+            LOG.info("Dispositivo deleted with ID: {}", id);
+        } catch (Exception e) {
+            LOG.error("Error deleting Dispositivo with ID: {}", id);
+        }
     }
 
     public List<DispositivoDTO> saveAll(List<DispositivoDTO> dispositivoDTOs) {

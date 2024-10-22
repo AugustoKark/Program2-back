@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,13 +152,33 @@ public class ApiSyncService {
 
     private void startScheduledSync() {
         LOG.info("Starting scheduled data sync");
-        //        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        //        scheduler.scheduleAtFixedRate(this::syncDataWithRetry, 0, 1, TimeUnit.HOURS);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(this::syncDataWithRetry, 0, 5, TimeUnit.MINUTES);
     }
 
+    //    private void updateLocalDatabase(List<DispositivoDTO> devices) {
+    //        LOG.info("Updating local database with {} devices", devices.size());
+    //        dispositivoService.saveAll(devices);
+    //
+    //        LOG.info("Local database updated successfully");
+    //    }
     private void updateLocalDatabase(List<DispositivoDTO> devices) {
         LOG.info("Updating local database with {} devices", devices.size());
-        dispositivoService.saveAll(devices);
+        List<DispositivoDTO> localDevices = dispositivoService.findAllNoPag();
+
+        // Crear un mapa de dispositivos locales para una búsqueda rápida
+        Map<Long, DispositivoDTO> localDeviceMap = localDevices
+            .stream()
+            .collect(Collectors.toMap(DispositivoDTO::getId, dispositivo -> dispositivo));
+
+        for (DispositivoDTO remoteDevice : devices) {
+            DispositivoDTO localDevice = localDeviceMap.get(remoteDevice.getId());
+            if (localDevice == null || !localDevice.equals(remoteDevice)) {
+                // Si el dispositivo no existe localmente o ha cambiado, actualizarlo
+                dispositivoService.save(remoteDevice);
+                LOG.info("Device updated: {}", remoteDevice.getId());
+            }
+        }
 
         LOG.info("Local database updated successfully");
     }

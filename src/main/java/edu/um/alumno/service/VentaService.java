@@ -65,11 +65,16 @@ public class VentaService {
      * @return the persisted entity.
      */
     public VentaDTO save(VentaDTO ventaDTO) {
-        LOG.debug("Request to save Venta : {}", ventaDTO);
-        Venta venta = ventaMapper.toEntity(ventaDTO);
-        venta = ventaRepository.save(venta);
-        LOG.info("Venta saved with ID: {}", venta.getId());
-        return ventaMapper.toDto(venta);
+        try {
+            LOG.debug("Request to save Venta : {}", ventaDTO);
+            Venta venta = ventaMapper.toEntity(ventaDTO);
+            venta = ventaRepository.save(venta);
+            LOG.info("Venta saved with ID: {}", venta.getId());
+            return ventaMapper.toDto(venta);
+        } catch (Exception e) {
+            LOG.error("Error saving Venta", e);
+            throw new RuntimeException("Error saving Venta", e);
+        }
     }
 
     /**
@@ -79,11 +84,16 @@ public class VentaService {
      * @return the persisted entity.
      */
     public VentaDTO update(VentaDTO ventaDTO) {
-        LOG.debug("Request to update Venta : {}", ventaDTO);
-        Venta venta = ventaMapper.toEntity(ventaDTO);
-        venta = ventaRepository.save(venta);
-        LOG.info("Venta updated with ID: {}", venta.getId());
-        return ventaMapper.toDto(venta);
+        try {
+            LOG.debug("Request to update Venta : {}", ventaDTO);
+            Venta venta = ventaMapper.toEntity(ventaDTO);
+            venta = ventaRepository.save(venta);
+            LOG.info("Venta updated with ID: {}", venta.getId());
+            return ventaMapper.toDto(venta);
+        } catch (Exception e) {
+            LOG.error("Error updating Venta", e);
+            throw new RuntimeException("Error updating Venta", e);
+        }
     }
 
     /**
@@ -127,8 +137,13 @@ public class VentaService {
      */
     @Transactional(readOnly = true)
     public Optional<VentaDTO> findOne(Long id) {
-        LOG.debug("Request to get Venta : {}", id);
-        return ventaRepository.findById(id).map(ventaMapper::toDto);
+        try {
+            LOG.debug("Request to get Venta : {}", id);
+            return ventaRepository.findById(id).map(ventaMapper::toDto);
+        } catch (Exception e) {
+            LOG.error("Error getting Venta", e);
+            throw new RuntimeException("Error getting Venta", e);
+        }
     }
 
     /**
@@ -137,94 +152,119 @@ public class VentaService {
      * @param id the id of the entity.
      */
     public void delete(Long id) {
-        LOG.debug("Request to delete Venta : {}", id);
-        ventaRepository.deleteById(id);
-        LOG.info("Venta deleted with ID: {}", id);
+        try {
+            LOG.debug("Request to delete Venta : {}", id);
+            ventaRepository.deleteById(id);
+            LOG.info("Venta deleted with ID: {}", id);
+        } catch (Exception e) {
+            LOG.error("Error deleting Venta", e);
+            throw new RuntimeException("Error deleting Venta", e);
+        }
     }
 
     public List<VentaDTO> getVentasByUserId(Long userId) {
-        LOG.debug("Request to get all Ventas for user : {}", userId);
-        List<Venta> ventas = ventaRepository.findByUserId(userId);
-        LOG.info("Found {} ventas for user ID: {}", ventas.size(), userId);
+        try {
+            LOG.debug("Request to get all Ventas for user : {}", userId);
+            List<Venta> ventas = ventaRepository.findByUserId(userId);
+            LOG.info("Found {} ventas for user ID: {}", ventas.size(), userId);
 
-        return ventas.stream().map(ventaMapper::toDto).collect(Collectors.toList());
+            return ventas.stream().map(ventaMapper::toDto).collect(Collectors.toList());
+        } catch (Exception e) {
+            LOG.error("Error getting Ventas", e);
+            throw new RuntimeException("Error getting Ventas", e);
+        }
     }
 
     public Venta procesarVenta(VentaRequestDTO ventaRequestDTO) {
-        String token = getToken();
+        try {
+            String token = getToken();
 
-        // Obtener el id del usuario autenticado
-        Long userId = ventaRequestDTO.getUserId();
-        LOG.debug("Processing venta for user ID: {}", userId);
+            // Obtener el id del usuario autenticado
+            Long userId = ventaRequestDTO.getUserId();
+            LOG.debug("Processing venta for user ID: {}", userId);
 
-        // Obtener el usuario desde el repositorio
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+            // Obtener el usuario desde el repositorio
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Crear los headers y agregar el token JWT
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+            // Crear los headers y agregar el token JWT
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
 
-        // Crear la entidad HTTP con los headers y el cuerpo de la solicitud
-        HttpEntity<VentaRequestDTO> entity = new HttpEntity<>(ventaRequestDTO, headers);
+            // Crear la entidad HTTP con los headers y el cuerpo de la solicitud
+            HttpEntity<VentaRequestDTO> entity = new HttpEntity<>(ventaRequestDTO, headers);
 
-        // Enviar solicitud al backend del profesor
-        ResponseEntity<VentaResponseDTO> response = restTemplate.exchange(
-            profesorBackendUrl + "/vender",
-            HttpMethod.POST,
-            entity,
-            VentaResponseDTO.class
-        );
+            // Enviar solicitud al backend del profesor
+            ResponseEntity<VentaResponseDTO> response = restTemplate.exchange(
+                profesorBackendUrl + "/vender",
+                HttpMethod.POST,
+                entity,
+                VentaResponseDTO.class
+            );
 
-        LOG.info("Venta processed with response: {}", response.getBody());
+            LOG.info("Venta processed with response: {}", response.getBody());
 
-        // Crear y guardar la venta en la base de datos
-        Venta venta = new Venta();
+            // Crear y guardar la venta en la base de datos
+            Venta venta = new Venta();
 
-        venta.setId(VentaResponseDTO.getIdVenta());
-        venta.setFechaVenta(ventaRequestDTO.getFechaVenta());
-        venta.setPrecioFinal(ventaRequestDTO.getPrecioFinal());
-        venta.setUser(user);
+            venta.setId(VentaResponseDTO.getIdVenta());
+            venta.setFechaVenta(ventaRequestDTO.getFechaVenta());
+            venta.setPrecioFinal(ventaRequestDTO.getPrecioFinal());
+            venta.setUser(user);
 
-        return ventaRepository.save(venta);
+            return ventaRepository.save(venta);
+        } catch (Exception e) {
+            LOG.error("Error processing Venta", e);
+            throw new RuntimeException("Error processing Venta", e);
+        }
     }
 
     public static Map<String, Object> getVentaById(Long id) {
-        String token = getToken();
+        try {
+            String token = getToken();
 
-        LOG.debug("Request to get Venta by ID from profesor backend: {}", id);
+            LOG.debug("Request to get Venta by ID from profesor backend: {}", id);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-            profesorBackendUrl + "/venta/" + id,
-            HttpMethod.GET,
-            entity,
-            new ParameterizedTypeReference<Map<String, Object>>() {}
-        );
-        LOG.info("Venta retrieved from profesor backend: {}", response.getBody());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                profesorBackendUrl + "/venta/" + id,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+            LOG.info("Venta retrieved from profesor backend: {}", response.getBody());
 
-        return response.getBody();
+            return response.getBody();
+        } catch (Exception e) {
+            LOG.error("Error getting Venta by ID", e);
+            throw new RuntimeException("Error getting Venta by ID", e);
+        }
     }
 
     public static List<Map<String, Object>> getAllVentasAdmin() {
-        String token = getToken();
-        LOG.debug("Request to get all Ventas from profesor backend as admin");
+        try {
+            String token = getToken();
+            LOG.debug("Request to get all Ventas from profesor backend as admin");
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-            profesorBackendUrl + "/ventas",
-            HttpMethod.GET,
-            entity,
-            new ParameterizedTypeReference<List<Map<String, Object>>>() {}
-        );
-        LOG.info("All ventas retrieved from profesor backend: {}", response.getBody());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                profesorBackendUrl + "/ventas",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+            );
+            LOG.info("All ventas retrieved from profesor backend: {}", response.getBody());
 
-        return response.getBody();
+            return response.getBody();
+        } catch (Exception e) {
+            LOG.error("Error getting all Ventas as admin", e);
+            throw new RuntimeException("Error getting all Ventas as admin", e);
+        }
     }
 
     private static String getToken() {
