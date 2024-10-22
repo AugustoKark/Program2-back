@@ -162,7 +162,7 @@ public class ApiSyncService {
     //
     //        LOG.info("Local database updated successfully");
     //    }
-    private void updateLocalDatabase(List<DispositivoDTO> devices) {
+    void updateLocalDatabase(List<DispositivoDTO> devices) {
         LOG.info("Updating local database with {} devices", devices.size());
         List<DispositivoDTO> localDevices = dispositivoService.findAllNoPag();
 

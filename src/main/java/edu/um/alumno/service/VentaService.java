@@ -86,6 +86,11 @@ public class VentaService {
     public VentaDTO update(VentaDTO ventaDTO) {
         try {
             LOG.debug("Request to update Venta : {}", ventaDTO);
+            Optional<Venta> optionalVenta = ventaRepository.findById(ventaDTO.getId());
+            if (optionalVenta.isEmpty()) {
+                LOG.warn("Venta with ID {} not found", ventaDTO.getId());
+                return null; // or throw an exception
+            }
             Venta venta = ventaMapper.toEntity(ventaDTO);
             venta = ventaRepository.save(venta);
             LOG.info("Venta updated with ID: {}", venta.getId());

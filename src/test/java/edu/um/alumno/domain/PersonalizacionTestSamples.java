@@ -1,5 +1,6 @@
 package edu.um.alumno.domain;
 
+import edu.um.alumno.service.dto.PersonalizacionDTO;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,5 +23,21 @@ public class PersonalizacionTestSamples {
             .id(longCount.incrementAndGet())
             .nombre(UUID.randomUUID().toString())
             .descripcion(UUID.randomUUID().toString());
+    }
+
+    public static PersonalizacionDTO getPersonalizacionDTOSample1() {
+        PersonalizacionDTO personalizacionDTO = new PersonalizacionDTO();
+        personalizacionDTO.setId(1L);
+        personalizacionDTO.setNombre("nombre1");
+        personalizacionDTO.setDescripcion("descripcion1");
+        return personalizacionDTO;
+    }
+
+    public static PersonalizacionDTO getPersonalizacionDTOSample2() {
+        PersonalizacionDTO personalizacionDTO = new PersonalizacionDTO();
+        personalizacionDTO.setId(2L);
+        personalizacionDTO.setNombre("nombre2");
+        personalizacionDTO.setDescripcion("descripcion2");
+        return personalizacionDTO;
     }
 }

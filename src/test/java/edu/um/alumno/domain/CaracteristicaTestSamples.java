@@ -1,5 +1,6 @@
 package edu.um.alumno.domain;
 
+import edu.um.alumno.service.dto.CaracteristicaDTO;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,5 +23,21 @@ public class CaracteristicaTestSamples {
             .id(longCount.incrementAndGet())
             .nombre(UUID.randomUUID().toString())
             .descripcion(UUID.randomUUID().toString());
+    }
+
+    public static CaracteristicaDTO getCaracteristicaDTOSample1() {
+        CaracteristicaDTO caracteristicaDTO = new CaracteristicaDTO();
+        caracteristicaDTO.setId(1L);
+        caracteristicaDTO.setNombre("nombre1");
+        caracteristicaDTO.setDescripcion("descripcion1");
+        return caracteristicaDTO;
+    }
+
+    public static CaracteristicaDTO getCaracteristicaDTOSample2() {
+        CaracteristicaDTO caracteristicaDTO = new CaracteristicaDTO();
+        caracteristicaDTO.setId(2L);
+        caracteristicaDTO.setNombre("nombre2");
+        caracteristicaDTO.setDescripcion("descripcion2");
+        return caracteristicaDTO;
     }
 }

@@ -750,6 +750,7 @@
                     <groupId>org.gaul</groupId>
                     <artifactId>modernizer-maven-plugin</artifactId>
                     <version>${modernizer-maven-plugin.version}</version>
+
                     <executions>
                         <execution>
                             <id>modernizer</id>
@@ -761,6 +762,10 @@
                     </executions>
                     <configuration>
                         <javaVersion>${java.version}</javaVersion>
+                      <excludes>
+                        <exclude>java/util/Optional#orElse(null)</exclude>
+                      </excludes>
+
                     </configuration>
                 </plugin>
                 <plugin>
