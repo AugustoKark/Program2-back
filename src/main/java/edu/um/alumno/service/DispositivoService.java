@@ -42,6 +42,7 @@ public class DispositivoService {
         LOG.debug("Request to save Dispositivo : {}", dispositivoDTO);
         Dispositivo dispositivo = dispositivoMapper.toEntity(dispositivoDTO);
         dispositivo = dispositivoRepository.save(dispositivo);
+        LOG.info("Dispositivo saved with ID: {}", dispositivo.getId());
         return dispositivoMapper.toDto(dispositivo);
     }
 
@@ -55,6 +56,7 @@ public class DispositivoService {
         LOG.debug("Request to update Dispositivo : {}", dispositivoDTO);
         Dispositivo dispositivo = dispositivoMapper.toEntity(dispositivoDTO);
         dispositivo = dispositivoRepository.save(dispositivo);
+        LOG.info("Dispositivo updated with ID: {}", dispositivo.getId());
         return dispositivoMapper.toDto(dispositivo);
     }
 
@@ -71,6 +73,7 @@ public class DispositivoService {
             .findById(dispositivoDTO.getId())
             .map(existingDispositivo -> {
                 dispositivoMapper.partialUpdate(existingDispositivo, dispositivoDTO);
+                LOG.info("Dispositivo partially updated with ID: {}", existingDispositivo.getId());
 
                 return existingDispositivo;
             })
@@ -119,12 +122,14 @@ public class DispositivoService {
     public void delete(Long id) {
         LOG.debug("Request to delete Dispositivo : {}", id);
         dispositivoRepository.deleteById(id);
+        LOG.info("Dispositivo deleted with ID: {}", id);
     }
 
     public List<DispositivoDTO> saveAll(List<DispositivoDTO> dispositivoDTOs) {
         LOG.debug("Request to save list of Dispositivos : {}", dispositivoDTOs);
         List<Dispositivo> dispositivos = dispositivoDTOs.stream().map(dispositivoMapper::toEntity).collect(Collectors.toList());
         dispositivos = dispositivoRepository.saveAll(dispositivos);
+        LOG.info("List of Dispositivos saved successfully");
         return null;
     }
 }

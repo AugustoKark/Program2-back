@@ -41,6 +41,7 @@ public class CaracteristicaService {
         LOG.debug("Request to save Caracteristica : {}", caracteristicaDTO);
         Caracteristica caracteristica = caracteristicaMapper.toEntity(caracteristicaDTO);
         caracteristica = caracteristicaRepository.save(caracteristica);
+        LOG.info("Caracteristica saved with ID: {}", caracteristica.getId());
         return caracteristicaMapper.toDto(caracteristica);
     }
 
@@ -54,6 +55,7 @@ public class CaracteristicaService {
         LOG.debug("Request to update Caracteristica : {}", caracteristicaDTO);
         Caracteristica caracteristica = caracteristicaMapper.toEntity(caracteristicaDTO);
         caracteristica = caracteristicaRepository.save(caracteristica);
+        LOG.info("Caracteristica updated with ID: {}", caracteristica.getId());
         return caracteristicaMapper.toDto(caracteristica);
     }
 
@@ -70,7 +72,7 @@ public class CaracteristicaService {
             .findById(caracteristicaDTO.getId())
             .map(existingCaracteristica -> {
                 caracteristicaMapper.partialUpdate(existingCaracteristica, caracteristicaDTO);
-
+                LOG.info("Caracteristica partially updated with ID: {}", existingCaracteristica.getId());
                 return existingCaracteristica;
             })
             .map(caracteristicaRepository::save)
@@ -112,5 +114,6 @@ public class CaracteristicaService {
     public void delete(Long id) {
         LOG.debug("Request to delete Caracteristica : {}", id);
         caracteristicaRepository.deleteById(id);
+        LOG.info("Caracteristica deleted with ID: {}", id);
     }
 }

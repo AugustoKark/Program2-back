@@ -48,32 +48,38 @@ public class ApiSyncService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initialize() {
+        LOG.info("Initializing ApiSyncService");
         syncDataWithRetry();
         startScheduledSync();
     }
 
     private void syncDataWithRetry() {
+        LOG.info("Starting data sync with retry");
         Optional<ApiToken> optionalToken = apiTokenManager.loadToken();
         if (optionalToken.isPresent()) {
             ApiToken token = optionalToken.get();
             try {
                 if (!syncData(token.getToken())) {
+                    LOG.warn("Token expired, renewing token");
                     token = renewToken();
                     syncData(token.getToken());
                 }
             } catch (HttpClientErrorException.Unauthorized e) {
+                LOG.error("Unauthorized error: {}", e.getMessage());
                 // Log the error and retry token renewal
                 System.err.println("Unauthorized error: " + e.getMessage());
                 token = renewToken();
                 syncData(token.getToken());
             }
         } else {
+            LOG.warn("No token found, renewing token");
             ApiToken token = renewToken();
             syncData(token.getToken());
         }
     }
 
     private boolean syncData(String jwtToken) {
+        LOG.info("Syncing data with token: {}", jwtToken);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(jwtToken);
         HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -87,17 +93,21 @@ public class ApiSyncService {
 
         if (response.getStatusCode() == HttpStatus.OK) {
             List<DispositivoDTO> devices = response.getBody();
-
+            LOG.info("Data sync successful, {} devices retrieved", devices.size());
             updateLocalDatabase(devices);
             return true;
         } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+            LOG.warn("Unauthorized access, token may be expired");
+
             return false;
         } else {
+            LOG.error("Failed to sync data, status code: {}", response.getStatusCode());
             throw new RuntimeException("Failed to sync data");
         }
     }
 
     private ApiToken renewToken() {
+        LOG.info("Renewing token");
         Map<String, Object> authRequest = new HashMap<>();
         authRequest.put("username", USERNAME);
         authRequest.put("password", PASSWORD);
@@ -106,50 +116,46 @@ public class ApiSyncService {
         ResponseEntity<AuthResponse> response = restTemplate.postForEntity(AUTH_URL, authRequest, AuthResponse.class);
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            System.out.println("----------------------------------------------");
-            System.out.println(response.getBody().getId_token());
-            System.out.println("----------------------------------------------");
             String newToken = response.getBody().getId_token();
+            LOG.info("Token renewed successfully: {}", newToken);
 
             System.out.println(newToken);
             ApiToken apiToken = new ApiToken();
             apiToken.setToken(newToken);
             apiTokenManager.saveToken(apiToken);
             updateTokenFile(newToken);
-            System.out.println("----------------------------------------------");
-
-            System.out.println("Token renewed at " + newToken);
-            System.out.println("----------------------------------------------");
 
             return apiToken;
         } else {
+            LOG.error("Failed to renew token, status code: {}", response.getStatusCode());
             throw new RuntimeException("Failed to renew token");
         }
     }
 
     private void updateTokenFile(String newToken) {
+        LOG.info("Updating token file with new token");
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("token", newToken);
 
         try (FileWriter file = new FileWriter("apitoken.json")) {
             file.write(jsonObject.toString());
+            LOG.info("Token file updated successfully");
         } catch (IOException e) {
+            LOG.error("Failed to update token file", e);
             throw new RuntimeException("Failed to update token file", e);
         }
     }
 
     private void startScheduledSync() {
+        LOG.info("Starting scheduled data sync");
         //        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         //        scheduler.scheduleAtFixedRate(this::syncDataWithRetry, 0, 1, TimeUnit.HOURS);
     }
 
     private void updateLocalDatabase(List<DispositivoDTO> devices) {
-        System.out.println("----------------------------------------------");
-        System.out.println("Updating local database with data from API");
-        System.out.println(devices);
+        LOG.info("Updating local database with {} devices", devices.size());
         dispositivoService.saveAll(devices);
 
-        System.out.println("Local database updated successfully");
-        System.out.println("----------------------------------------------");
+        LOG.info("Local database updated successfully");
     }
 }

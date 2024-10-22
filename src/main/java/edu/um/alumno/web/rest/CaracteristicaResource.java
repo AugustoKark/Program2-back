@@ -54,9 +54,11 @@ public class CaracteristicaResource {
         throws URISyntaxException {
         LOG.debug("REST request to save Caracteristica : {}", caracteristicaDTO);
         if (caracteristicaDTO.getId() != null) {
+            LOG.warn("A new caracteristica cannot already have an ID");
             throw new BadRequestAlertException("A new caracteristica cannot already have an ID", ENTITY_NAME, "idexists");
         }
         caracteristicaDTO = caracteristicaService.save(caracteristicaDTO);
+        LOG.info("Caracteristica saved with ID: {}", caracteristicaDTO.getId());
         return ResponseEntity.created(new URI("/api/caracteristicas/" + caracteristicaDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, caracteristicaDTO.getId().toString()))
             .body(caracteristicaDTO);
@@ -79,17 +81,21 @@ public class CaracteristicaResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to update Caracteristica : {}, {}", id, caracteristicaDTO);
         if (caracteristicaDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, caracteristicaDTO.getId())) {
+            LOG.warn("Invalid ID: {}", caracteristicaDTO.getId());
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!caracteristicaRepository.existsById(id)) {
+            LOG.warn("Entity not found with ID: {}", id);
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         caracteristicaDTO = caracteristicaService.update(caracteristicaDTO);
+        LOG.info("Caracteristica updated with ID: {}", caracteristicaDTO.getId());
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, caracteristicaDTO.getId().toString()))
             .body(caracteristicaDTO);
@@ -113,18 +119,21 @@ public class CaracteristicaResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update Caracteristica partially : {}, {}", id, caracteristicaDTO);
         if (caracteristicaDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, caracteristicaDTO.getId())) {
+            LOG.warn("Invalid ID: path ID {} does not match body ID {}", id, caracteristicaDTO.getId());
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!caracteristicaRepository.existsById(id)) {
+            LOG.warn("Entity not found with ID: {}", id);
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         Optional<CaracteristicaDTO> result = caracteristicaService.partialUpdate(caracteristicaDTO);
-
+        LOG.info("Caracteristica partially updated with ID: {}", caracteristicaDTO.getId());
         return ResponseUtil.wrapOrNotFound(
             result,
             HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, caracteristicaDTO.getId().toString())
@@ -152,6 +161,7 @@ public class CaracteristicaResource {
     public ResponseEntity<CaracteristicaDTO> getCaracteristica(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Caracteristica : {}", id);
         Optional<CaracteristicaDTO> caracteristicaDTO = caracteristicaService.findOne(id);
+        LOG.info("Caracteristica found with ID: {}", id);
         return ResponseUtil.wrapOrNotFound(caracteristicaDTO);
     }
 
@@ -165,6 +175,7 @@ public class CaracteristicaResource {
     public ResponseEntity<Void> deleteCaracteristica(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Caracteristica : {}", id);
         caracteristicaService.delete(id);
+        LOG.info("Caracteristica deleted with ID: {}", id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();

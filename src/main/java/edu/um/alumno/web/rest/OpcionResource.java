@@ -58,9 +58,11 @@ public class OpcionResource {
     public ResponseEntity<OpcionDTO> createOpcion(@Valid @RequestBody OpcionDTO opcionDTO) throws URISyntaxException {
         LOG.debug("REST request to save Opcion : {}", opcionDTO);
         if (opcionDTO.getId() != null) {
+            LOG.warn("A new opcion cannot already have an ID");
             throw new BadRequestAlertException("A new opcion cannot already have an ID", ENTITY_NAME, "idexists");
         }
         opcionDTO = opcionService.save(opcionDTO);
+        LOG.info("Opcion saved with ID: {}", opcionDTO.getId());
         return ResponseEntity.created(new URI("/api/opcions/" + opcionDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, opcionDTO.getId().toString()))
             .body(opcionDTO);
@@ -83,17 +85,21 @@ public class OpcionResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to update Opcion : {}, {}", id, opcionDTO);
         if (opcionDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, opcionDTO.getId())) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!opcionRepository.existsById(id)) {
+            LOG.warn("Entity not found");
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         opcionDTO = opcionService.update(opcionDTO);
+        LOG.info("Opcion updated with ID: {}", opcionDTO.getId());
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, opcionDTO.getId().toString()))
             .body(opcionDTO);
@@ -117,17 +123,21 @@ public class OpcionResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update Opcion partially : {}, {}", id, opcionDTO);
         if (opcionDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, opcionDTO.getId())) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!opcionRepository.existsById(id)) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         Optional<OpcionDTO> result = opcionService.partialUpdate(opcionDTO);
+        LOG.info("Opcion partially updated with ID: {}", result.get().getId());
 
         return ResponseUtil.wrapOrNotFound(
             result,
@@ -145,6 +155,7 @@ public class OpcionResource {
     public ResponseEntity<List<OpcionDTO>> getAllOpcions(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         LOG.debug("REST request to get a page of Opcions");
         Page<OpcionDTO> page = opcionService.findAll(pageable);
+
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -159,6 +170,7 @@ public class OpcionResource {
     public ResponseEntity<OpcionDTO> getOpcion(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Opcion : {}", id);
         Optional<OpcionDTO> opcionDTO = opcionService.findOne(id);
+        LOG.info("Opcion found with ID: {}", id);
         return ResponseUtil.wrapOrNotFound(opcionDTO);
     }
 
@@ -172,6 +184,7 @@ public class OpcionResource {
     public ResponseEntity<Void> deleteOpcion(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Opcion : {}", id);
         opcionService.delete(id);
+        LOG.info("Opcion deleted with ID: {}", id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();

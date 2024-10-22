@@ -58,9 +58,11 @@ public class DispositivoResource {
     public ResponseEntity<DispositivoDTO> createDispositivo(@Valid @RequestBody DispositivoDTO dispositivoDTO) throws URISyntaxException {
         LOG.debug("REST request to save Dispositivo : {}", dispositivoDTO);
         if (dispositivoDTO.getId() != null) {
+            LOG.warn("A new dispositivo cannot already have an ID");
             throw new BadRequestAlertException("A new dispositivo cannot already have an ID", ENTITY_NAME, "idexists");
         }
         dispositivoDTO = dispositivoService.save(dispositivoDTO);
+        LOG.info("Dispositivo saved with ID: {}", dispositivoDTO.getId());
         return ResponseEntity.created(new URI("/api/dispositivos/" + dispositivoDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, dispositivoDTO.getId().toString()))
             .body(dispositivoDTO);
@@ -83,17 +85,21 @@ public class DispositivoResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to update Dispositivo : {}, {}", id, dispositivoDTO);
         if (dispositivoDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, dispositivoDTO.getId())) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!dispositivoRepository.existsById(id)) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         dispositivoDTO = dispositivoService.update(dispositivoDTO);
+        LOG.info("Dispositivo updated with ID: {}", dispositivoDTO.getId());
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, dispositivoDTO.getId().toString()))
             .body(dispositivoDTO);
@@ -117,18 +123,21 @@ public class DispositivoResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update Dispositivo partially : {}, {}", id, dispositivoDTO);
         if (dispositivoDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, dispositivoDTO.getId())) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!dispositivoRepository.existsById(id)) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         Optional<DispositivoDTO> result = dispositivoService.partialUpdate(dispositivoDTO);
-
+        LOG.info("Dispositivo partially updated with ID: {}", dispositivoDTO.getId());
         return ResponseUtil.wrapOrNotFound(
             result,
             HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, dispositivoDTO.getId().toString())
@@ -153,6 +162,7 @@ public class DispositivoResource {
             page = dispositivoService.findAllWithEagerRelationships(pageable);
         } else {
             page = dispositivoService.findAll(pageable);
+            LOG.info("Found {} dispositivos", page.getTotalElements());
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -168,6 +178,7 @@ public class DispositivoResource {
     public ResponseEntity<DispositivoDTO> getDispositivo(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Dispositivo : {}", id);
         Optional<DispositivoDTO> dispositivoDTO = dispositivoService.findOne(id);
+        LOG.info("Dispositivo found with ID: {}", id);
         return ResponseUtil.wrapOrNotFound(dispositivoDTO);
     }
 
@@ -181,6 +192,7 @@ public class DispositivoResource {
     public ResponseEntity<Void> deleteDispositivo(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Dispositivo : {}", id);
         dispositivoService.delete(id);
+        LOG.info("Dispositivo deleted with ID: {}", id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();

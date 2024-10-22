@@ -68,6 +68,7 @@ public class VentaService {
         LOG.debug("Request to save Venta : {}", ventaDTO);
         Venta venta = ventaMapper.toEntity(ventaDTO);
         venta = ventaRepository.save(venta);
+        LOG.info("Venta saved with ID: {}", venta.getId());
         return ventaMapper.toDto(venta);
     }
 
@@ -81,6 +82,7 @@ public class VentaService {
         LOG.debug("Request to update Venta : {}", ventaDTO);
         Venta venta = ventaMapper.toEntity(ventaDTO);
         venta = ventaRepository.save(venta);
+        LOG.info("Venta updated with ID: {}", venta.getId());
         return ventaMapper.toDto(venta);
     }
 
@@ -97,6 +99,7 @@ public class VentaService {
             .findById(ventaDTO.getId())
             .map(existingVenta -> {
                 ventaMapper.partialUpdate(existingVenta, ventaDTO);
+                LOG.info("Venta updated with ID: {}", existingVenta.getId());
 
                 return existingVenta;
             })
@@ -136,11 +139,14 @@ public class VentaService {
     public void delete(Long id) {
         LOG.debug("Request to delete Venta : {}", id);
         ventaRepository.deleteById(id);
+        LOG.info("Venta deleted with ID: {}", id);
     }
 
     public List<VentaDTO> getVentasByUserId(Long userId) {
         LOG.debug("Request to get all Ventas for user : {}", userId);
         List<Venta> ventas = ventaRepository.findByUserId(userId);
+        LOG.info("Found {} ventas for user ID: {}", ventas.size(), userId);
+
         return ventas.stream().map(ventaMapper::toDto).collect(Collectors.toList());
     }
 
@@ -149,10 +155,7 @@ public class VentaService {
 
         // Obtener el id del usuario autenticado
         Long userId = ventaRequestDTO.getUserId();
-        System.out.println("----------------------------------------------");
-
-        System.out.println("REQUEST DTO: " + ventaRequestDTO.toString());
-        System.out.println("----------------------------------------------");
+        LOG.debug("Processing venta for user ID: {}", userId);
 
         // Obtener el usuario desde el repositorio
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -172,12 +175,7 @@ public class VentaService {
             VentaResponseDTO.class
         );
 
-        System.out.println("----------------------------------------------");
-
-        System.out.println("RESPONSE: " + response.getBody());
-        System.out.println("idVenta: " + VentaResponseDTO.getIdVenta());
-
-        System.out.println("----------------------------------------------");
+        LOG.info("Venta processed with response: {}", response.getBody());
 
         // Crear y guardar la venta en la base de datos
         Venta venta = new Venta();
@@ -193,12 +191,10 @@ public class VentaService {
     public static Map<String, Object> getVentaById(Long id) {
         String token = getToken();
 
+        LOG.debug("Request to get Venta by ID from profesor backend: {}", id);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
-
-        System.out.println("----------------------------------------------");
-        System.out.println("Pidiendo venta con id: " + id + " al PROFE");
-        System.out.println("----------------------------------------------");
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
@@ -207,18 +203,17 @@ public class VentaService {
             entity,
             new ParameterizedTypeReference<Map<String, Object>>() {}
         );
+        LOG.info("Venta retrieved from profesor backend: {}", response.getBody());
 
         return response.getBody();
     }
 
     public static List<Map<String, Object>> getAllVentasAdmin() {
         String token = getToken();
+        LOG.debug("Request to get all Ventas from profesor backend as admin");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
-        System.out.println("----------------------------------------------");
-        System.out.println("Pidiendo todas las ventas al PROFE SIENDO ADMIN");
-        System.out.println("----------------------------------------------");
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
@@ -227,6 +222,7 @@ public class VentaService {
             entity,
             new ParameterizedTypeReference<List<Map<String, Object>>>() {}
         );
+        LOG.info("All ventas retrieved from profesor backend: {}", response.getBody());
 
         return response.getBody();
     }
@@ -238,7 +234,10 @@ public class VentaService {
             byte[] jsonData = Files.readAllBytes(Paths.get("apitoken.json"));
             Map<String, String> tokenMap = objectMapper.readValue(jsonData, Map.class);
             token = tokenMap.get("token");
+            LOG.debug("Token retrieved from apitoken.json");
         } catch (IOException e) {
+            LOG.error("Error reading token from apitoken.json", e);
+
             throw new RuntimeException("Error reading token from apitoken.json", e);
         }
         return token;

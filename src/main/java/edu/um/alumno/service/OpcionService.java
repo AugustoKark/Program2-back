@@ -40,6 +40,7 @@ public class OpcionService {
         LOG.debug("Request to save Opcion : {}", opcionDTO);
         Opcion opcion = opcionMapper.toEntity(opcionDTO);
         opcion = opcionRepository.save(opcion);
+        LOG.info("Opcion saved with ID: {}", opcion.getId());
         return opcionMapper.toDto(opcion);
     }
 
@@ -53,6 +54,8 @@ public class OpcionService {
         LOG.debug("Request to update Opcion : {}", opcionDTO);
         Opcion opcion = opcionMapper.toEntity(opcionDTO);
         opcion = opcionRepository.save(opcion);
+        LOG.info("Opcion updated with ID: {}", opcion.getId());
+
         return opcionMapper.toDto(opcion);
     }
 
@@ -69,7 +72,7 @@ public class OpcionService {
             .findById(opcionDTO.getId())
             .map(existingOpcion -> {
                 opcionMapper.partialUpdate(existingOpcion, opcionDTO);
-
+                LOG.info("Opcion partially updated with ID: {}", existingOpcion.getId());
                 return existingOpcion;
             })
             .map(opcionRepository::save)
@@ -108,5 +111,6 @@ public class OpcionService {
     public void delete(Long id) {
         LOG.debug("Request to delete Opcion : {}", id);
         opcionRepository.deleteById(id);
+        LOG.info("Opcion deleted with ID: {}", id);
     }
 }

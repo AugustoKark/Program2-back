@@ -61,9 +61,11 @@ public class VentaResource {
     public ResponseEntity<VentaDTO> createVenta(@Valid @RequestBody VentaDTO ventaDTO) throws URISyntaxException {
         LOG.debug("REST request to save Venta : {}", ventaDTO);
         if (ventaDTO.getId() != null) {
+            LOG.warn("Attempt to create a Venta with existing ID: {}", ventaDTO.getId());
             throw new BadRequestAlertException("A new venta cannot already have an ID", ENTITY_NAME, "idexists");
         }
         ventaDTO = ventaService.save(ventaDTO);
+        LOG.info("Venta created with ID: {}", ventaDTO.getId());
         return ResponseEntity.created(new URI("/api/ventas/" + ventaDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, ventaDTO.getId().toString()))
             .body(ventaDTO);
@@ -86,17 +88,21 @@ public class VentaResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to update Venta : {}, {}", id, ventaDTO);
         if (ventaDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, ventaDTO.getId())) {
+            LOG.warn("Invalid ID: path ID {} does not match body ID {}", id, ventaDTO.getId());
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!ventaRepository.existsById(id)) {
+            LOG.warn("Entity not found with ID: {}", id);
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         ventaDTO = ventaService.update(ventaDTO);
+        LOG.info("Venta updated with ID: {}", ventaDTO.getId());
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, ventaDTO.getId().toString()))
             .body(ventaDTO);
@@ -120,17 +126,21 @@ public class VentaResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to partial update Venta partially : {}, {}", id, ventaDTO);
         if (ventaDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, ventaDTO.getId())) {
+            LOG.warn("Invalid ID: path ID {} does not match body ID {}", id, ventaDTO.getId());
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!ventaRepository.existsById(id)) {
+            LOG.warn("Entity not found with ID: {}", id);
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         Optional<VentaDTO> result = ventaService.partialUpdate(ventaDTO);
+        LOG.info("Venta partially updated with ID: {}", id);
 
         return ResponseUtil.wrapOrNotFound(
             result,
@@ -149,6 +159,7 @@ public class VentaResource {
         LOG.debug("REST request to get a page of Ventas");
         Page<VentaDTO> page = ventaService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        LOG.info("Returning {} ventas", page.getContent().size());
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
@@ -162,6 +173,7 @@ public class VentaResource {
     public ResponseEntity<VentaDTO> getVenta(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Venta : {}", id);
         Optional<VentaDTO> ventaDTO = ventaService.findOne(id);
+        LOG.info("Returning venta with ID: {}", id);
         return ResponseUtil.wrapOrNotFound(ventaDTO);
     }
 
@@ -175,6 +187,7 @@ public class VentaResource {
     public ResponseEntity<Void> deleteVenta(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Venta : {}", id);
         ventaService.delete(id);
+        LOG.info("Venta deleted with ID: {}", id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
@@ -182,6 +195,7 @@ public class VentaResource {
 
     @PostMapping("/vender")
     public Venta crearVenta(@RequestBody VentaRequestDTO ventaRequestDTO) {
+        LOG.debug("REST request to create Venta : {}", ventaRequestDTO);
         return ventaService.procesarVenta(ventaRequestDTO);
     }
 
@@ -189,6 +203,7 @@ public class VentaResource {
     public ResponseEntity<Map<String, Object>> getVentaFromProfesor(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Venta from profesor backend : {}", id);
         Map<String, Object> ventaInfo = ventaService.getVentaById(id);
+        LOG.info("Returning venta from profesor backend with ID: {}", id);
         return ResponseEntity.ok().body(ventaInfo);
     }
 
@@ -196,6 +211,7 @@ public class VentaResource {
     public ResponseEntity<List<Map<String, Object>>> getVentaFromAdmin() {
         LOG.debug("REST request to get all Ventas from profesor backend");
         List<Map<String, Object>> ventasInfo = ventaService.getAllVentasAdmin();
+        LOG.info("Returning all ventas from profesor backend");
         return ResponseEntity.ok().body(ventasInfo);
     }
 
@@ -203,6 +219,7 @@ public class VentaResource {
     public ResponseEntity<List<VentaDTO>> getVentasByUserId(@PathVariable("userId") Long userId) {
         LOG.debug("REST request to get all Ventas for user : {}", userId);
         List<VentaDTO> ventas = ventaService.getVentasByUserId(userId);
+        LOG.info("Returning {} ventas for user ID: {}", ventas.size(), userId);
         return ResponseEntity.ok().body(ventas);
     }
 }

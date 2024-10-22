@@ -58,9 +58,11 @@ public class AdicionalResource {
     public ResponseEntity<AdicionalDTO> createAdicional(@Valid @RequestBody AdicionalDTO adicionalDTO) throws URISyntaxException {
         LOG.debug("REST request to save Adicional : {}", adicionalDTO);
         if (adicionalDTO.getId() != null) {
+            LOG.warn("A new adicional cannot already have an ID");
             throw new BadRequestAlertException("A new adicional cannot already have an ID", ENTITY_NAME, "idexists");
         }
         adicionalDTO = adicionalService.save(adicionalDTO);
+        LOG.info("Adicional saved with ID: {}", adicionalDTO.getId());
         return ResponseEntity.created(new URI("/api/adicionals/" + adicionalDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, adicionalDTO.getId().toString()))
             .body(adicionalDTO);
@@ -83,17 +85,23 @@ public class AdicionalResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to update Adicional : {}, {}", id, adicionalDTO);
         if (adicionalDTO.getId() == null) {
+            LOG.warn("Invalid ID: null");
+
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         if (!Objects.equals(id, adicionalDTO.getId())) {
+            LOG.warn("Invalid ID: path ID {} does not match body ID {}", id, adicionalDTO.getId());
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
         if (!adicionalRepository.existsById(id)) {
+            LOG.warn("Entity not found with ID: {}", id);
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         adicionalDTO = adicionalService.update(adicionalDTO);
+        LOG.info("Adicional updated with ID: {}", adicionalDTO.getId());
+
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, adicionalDTO.getId().toString()))
             .body(adicionalDTO);
@@ -146,6 +154,7 @@ public class AdicionalResource {
         LOG.debug("REST request to get a page of Adicionals");
         Page<AdicionalDTO> page = adicionalService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        LOG.info("Returned page of Adicionals");
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
@@ -159,6 +168,7 @@ public class AdicionalResource {
     public ResponseEntity<AdicionalDTO> getAdicional(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Adicional : {}", id);
         Optional<AdicionalDTO> adicionalDTO = adicionalService.findOne(id);
+        LOG.info("Returned Adicional with ID: {}", adicionalDTO.get().getId());
         return ResponseUtil.wrapOrNotFound(adicionalDTO);
     }
 
@@ -172,6 +182,7 @@ public class AdicionalResource {
     public ResponseEntity<Void> deleteAdicional(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Adicional : {}", id);
         adicionalService.delete(id);
+        LOG.info("Adicional deleted with ID: {}", id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
