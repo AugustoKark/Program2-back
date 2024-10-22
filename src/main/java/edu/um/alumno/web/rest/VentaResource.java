@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -182,5 +183,26 @@ public class VentaResource {
     @PostMapping("/vender")
     public Venta crearVenta(@RequestBody VentaRequestDTO ventaRequestDTO) {
         return ventaService.procesarVenta(ventaRequestDTO);
+    }
+
+    @GetMapping("/profesor/{id}")
+    public ResponseEntity<Map<String, Object>> getVentaFromProfesor(@PathVariable("id") Long id) {
+        LOG.debug("REST request to get Venta from profesor backend : {}", id);
+        Map<String, Object> ventaInfo = ventaService.getVentaById(id);
+        return ResponseEntity.ok().body(ventaInfo);
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<List<Map<String, Object>>> getVentaFromAdmin() {
+        LOG.debug("REST request to get all Ventas from profesor backend");
+        List<Map<String, Object>> ventasInfo = ventaService.getAllVentasAdmin();
+        return ResponseEntity.ok().body(ventasInfo);
+    }
+
+    @GetMapping("/usuario/{userId}")
+    public ResponseEntity<List<VentaDTO>> getVentasByUserId(@PathVariable("userId") Long userId) {
+        LOG.debug("REST request to get all Ventas for user : {}", userId);
+        List<VentaDTO> ventas = ventaService.getVentasByUserId(userId);
+        return ResponseEntity.ok().body(ventas);
     }
 }

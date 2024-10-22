@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 @SuppressWarnings("unused")
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Long> {
-    @Query("select venta from Venta venta where venta.user.login = ?#{authentication.name}")
-    List<Venta> findByUserIsCurrentUser();
+    //    @Query("select venta from Venta venta where venta.user.login = ?#{authentication.name}")
+    //    List<Venta> findByUserIsCurrentUser();
+
+    List<Venta> findByUserId(Long userId);
 }

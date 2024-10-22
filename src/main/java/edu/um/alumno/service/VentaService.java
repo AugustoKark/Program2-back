@@ -15,10 +15,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
@@ -46,8 +49,8 @@ public class VentaService {
 
     private final VentaMapper ventaMapper;
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final String profesorBackendUrl = "http://192.168.194.254:8080/api/catedra/vender";
+    private static final RestTemplate restTemplate = new RestTemplate();
+    private static final String profesorBackendUrl = "http://192.168.194.254:8080/api/catedra/";
 
     public VentaService(VentaRepository ventaRepository, VentaMapper ventaMapper, UserRepository userRepository) {
         this.ventaRepository = ventaRepository;
@@ -135,16 +138,14 @@ public class VentaService {
         ventaRepository.deleteById(id);
     }
 
+    public List<VentaDTO> getVentasByUserId(Long userId) {
+        LOG.debug("Request to get all Ventas for user : {}", userId);
+        List<Venta> ventas = ventaRepository.findByUserId(userId);
+        return ventas.stream().map(ventaMapper::toDto).collect(Collectors.toList());
+    }
+
     public Venta procesarVenta(VentaRequestDTO ventaRequestDTO) {
-        String token = null;
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            byte[] jsonData = Files.readAllBytes(Paths.get("apitoken.json"));
-            Map<String, String> tokenMap = objectMapper.readValue(jsonData, Map.class);
-            token = tokenMap.get("token");
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading token from apitoken.json", e);
-        }
+        String token = getToken();
 
         // Obtener el id del usuario autenticado
         Long userId = ventaRequestDTO.getUserId();
@@ -165,7 +166,7 @@ public class VentaService {
 
         // Enviar solicitud al backend del profesor
         ResponseEntity<VentaResponseDTO> response = restTemplate.exchange(
-            profesorBackendUrl,
+            profesorBackendUrl + "/vender",
             HttpMethod.POST,
             entity,
             VentaResponseDTO.class
@@ -180,12 +181,66 @@ public class VentaService {
 
         // Crear y guardar la venta en la base de datos
         Venta venta = new Venta();
-        // No establecer manualmente el ID de la venta
+
         venta.setId(VentaResponseDTO.getIdVenta());
         venta.setFechaVenta(ventaRequestDTO.getFechaVenta());
         venta.setPrecioFinal(ventaRequestDTO.getPrecioFinal());
         venta.setUser(user);
 
         return ventaRepository.save(venta);
+    }
+
+    public static Map<String, Object> getVentaById(Long id) {
+        String token = getToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        System.out.println("----------------------------------------------");
+        System.out.println("Pidiendo venta con id: " + id + " al PROFE");
+        System.out.println("----------------------------------------------");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+            profesorBackendUrl + "/venta/" + id,
+            HttpMethod.GET,
+            entity,
+            new ParameterizedTypeReference<Map<String, Object>>() {}
+        );
+
+        return response.getBody();
+    }
+
+    public static List<Map<String, Object>> getAllVentasAdmin() {
+        String token = getToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        System.out.println("----------------------------------------------");
+        System.out.println("Pidiendo todas las ventas al PROFE SIENDO ADMIN");
+        System.out.println("----------------------------------------------");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+            profesorBackendUrl + "/ventas",
+            HttpMethod.GET,
+            entity,
+            new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+        );
+
+        return response.getBody();
+    }
+
+    private static String getToken() {
+        String token = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            byte[] jsonData = Files.readAllBytes(Paths.get("apitoken.json"));
+            Map<String, String> tokenMap = objectMapper.readValue(jsonData, Map.class);
+            token = tokenMap.get("token");
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading token from apitoken.json", e);
+        }
+        return token;
     }
 }
