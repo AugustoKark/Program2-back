@@ -57,7 +57,7 @@ public class ApiSyncService {
         startScheduledSync();
     }
 
-    private void syncDataWithRetry() {
+    void syncDataWithRetry() {
         LOG.info("Starting data sync with retry");
         Optional<ApiToken> optionalToken = apiTokenManager.loadToken();
         if (optionalToken.isPresent()) {
@@ -110,7 +110,7 @@ public class ApiSyncService {
         }
     }
 
-    private ApiToken renewToken() {
+    ApiToken renewToken() {
         LOG.info("Renewing token");
         Map<String, Object> authRequest = new HashMap<>();
         authRequest.put("username", USERNAME);
