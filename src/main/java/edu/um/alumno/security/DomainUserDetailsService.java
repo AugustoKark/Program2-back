@@ -34,11 +34,13 @@ public class DomainUserDetailsService implements UserDetailsService {
         LOG.debug("Authenticating {}", login);
 
         if (new EmailValidator().isValid(login, null)) {
+            LOG.debug("Trying to authenticate by email: {}", login);
             return userRepository
                 .findOneWithAuthoritiesByEmailIgnoreCase(login)
                 .map(user -> createSpringSecurityUser(login, user))
                 .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
         }
+        LOG.info("Trying to authenticate by login: {}", login);
 
         String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
         return userRepository

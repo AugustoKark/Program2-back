@@ -42,7 +42,7 @@ public class ApiSyncService {
     private static final String PASSWORD = "juan123";
 
     @Autowired
-    private DispositivoService dispositivoService;
+    DispositivoService dispositivoService;
 
     @Autowired
     public ApiSyncService(ApiTokenManager apiTokenManager, RestTemplate restTemplate) {
@@ -82,7 +82,7 @@ public class ApiSyncService {
         }
     }
 
-    private boolean syncData(String jwtToken) {
+    protected boolean syncData(String jwtToken) {
         LOG.info("Syncing data with token: {}", jwtToken);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(jwtToken);
@@ -136,7 +136,7 @@ public class ApiSyncService {
         }
     }
 
-    private void updateTokenFile(String newToken) {
+    void updateTokenFile(String newToken) {
         LOG.info("Updating token file with new token");
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("token", newToken);
