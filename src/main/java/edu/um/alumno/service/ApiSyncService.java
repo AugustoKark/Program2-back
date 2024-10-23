@@ -82,31 +82,73 @@ public class ApiSyncService {
         }
     }
 
+    //    protected boolean syncData(String jwtToken) {
+    //        LOG.info("Syncing data with token: {}", jwtToken);
+    //        HttpHeaders headers = new HttpHeaders();
+    //        headers.setBearerAuth(jwtToken);
+    //        HttpEntity<String> entity = new HttpEntity<>(headers);
+    //
+    //        ResponseEntity<List<DispositivoDTO>> response = restTemplate.exchange(
+    //            DEVICES_URL,
+    //            HttpMethod.GET,
+    //            entity,
+    //            new ParameterizedTypeReference<List<DispositivoDTO>>() {}
+    //        );
+    //
+    //        if (response.getStatusCode() == HttpStatus.OK) {
+    //            List<DispositivoDTO> devices = response.getBody();
+    //            LOG.info("Data sync successful, {} devices retrieved", devices.size());
+    //            updateLocalDatabase(devices);
+    //            return true;
+    //        } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+    //            LOG.warn("Unauthorized access, token may be expired");
+    //            return false;
+    //        } else {
+    //            LOG.error("Failed to sync data, status code: {}", response.getStatusCode());
+    //            throw new RuntimeException("Failed to sync data");
+    //        }
+    //    }
+
     protected boolean syncData(String jwtToken) {
         LOG.info("Syncing data with token: {}", jwtToken);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(jwtToken);
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<List<DispositivoDTO>> response = restTemplate.exchange(
-            DEVICES_URL,
-            HttpMethod.GET,
-            entity,
-            new ParameterizedTypeReference<List<DispositivoDTO>>() {}
-        );
+        try {
+            ResponseEntity<List<DispositivoDTO>> response = restTemplate.exchange(
+                DEVICES_URL,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<List<DispositivoDTO>>() {}
+            );
 
-        if (response.getStatusCode() == HttpStatus.OK) {
-            List<DispositivoDTO> devices = response.getBody();
-            LOG.info("Data sync successful, {} devices retrieved", devices.size());
-            updateLocalDatabase(devices);
-            return true;
-        } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-            LOG.warn("Unauthorized access, token may be expired");
+            if (response == null || response.getBody() == null) {
+                LOG.error("Response or response body is null");
+                throw new RuntimeException("Failed to sync data: response or response body is null");
+            }
 
-            return false;
-        } else {
-            LOG.error("Failed to sync data, status code: {}", response.getStatusCode());
-            throw new RuntimeException("Failed to sync data");
+            if (response.getStatusCode() == HttpStatus.OK) {
+                List<DispositivoDTO> devices = response.getBody();
+                LOG.info("Data sync successful, {} devices retrieved", devices.size());
+                updateLocalDatabase(devices);
+                return true;
+            } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                LOG.warn("Unauthorized access, token may be expired");
+                System.out.println("Entre aqui -------------------------------------------");
+                return false;
+            } else {
+                LOG.error("Failed to sync data, status code: {}", response.getStatusCode());
+                throw new RuntimeException("Failed to sync data");
+            }
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                LOG.warn("Unauthorized access, token may be expired");
+                return false;
+            } else {
+                LOG.error("Failed to sync data", e);
+                throw new RuntimeException("Failed to sync data", e);
+            }
         }
     }
 

@@ -123,4 +123,30 @@ class ApiSyncServiceTest {
 
         verify(dispositivoService, times(1)).save(dispositivoDTO);
     }
+
+    @Test
+    void testSyncData_NullResponse() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth("test-token");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), eq(entity), any(ParameterizedTypeReference.class))).thenReturn(null);
+
+        assertThrows(RuntimeException.class, () -> apiSyncService.syncData("test-token"));
+    }
+
+    @Test
+    void testSyncData_Unauthorized() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth("test-token");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), eq(entity), any(ParameterizedTypeReference.class))).thenThrow(
+            new HttpClientErrorException(HttpStatus.UNAUTHORIZED)
+        );
+
+        boolean result = apiSyncService.syncData("test-token");
+
+        assertFalse(result);
+    }
 }
