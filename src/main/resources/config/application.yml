@@ -224,3 +224,9 @@ jhipster:
 # ===================================================================
 
 # application:
+
+professor:
+  api:
+    url: 'http://192.168.194.254:8080/api'
+    username: 'juanperez11'
+    password: 'juan123'

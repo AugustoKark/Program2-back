@@ -110,23 +110,25 @@ public class DispositivoDTO implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof DispositivoDTO)) {
-            return false;
-        }
-
-        DispositivoDTO dispositivoDTO = (DispositivoDTO) o;
-        if (this.id == null) {
-            return false;
-        }
-        return Objects.equals(this.id, dispositivoDTO.id);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DispositivoDTO that = (DispositivoDTO) o;
+        return (
+            Objects.equals(id, that.id) &&
+            Objects.equals(codigo, that.codigo) &&
+            Objects.equals(nombre, that.nombre) &&
+            Objects.equals(descripcion, that.descripcion) &&
+            Objects.equals(precioBase, that.precioBase) &&
+            Objects.equals(moneda, that.moneda) &&
+            Objects.equals(caracteristicas, that.caracteristicas) &&
+            Objects.equals(personalizaciones, that.personalizaciones) &&
+            Objects.equals(adicionales, that.adicionales)
+        );
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.id);
+        return Objects.hash(id, nombre, precioBase, moneda, caracteristicas, personalizaciones, adicionales);
     }
 
     // prettier-ignore
